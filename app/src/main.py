@@ -50,6 +50,7 @@ async def create_evidence_processing_task(task: FunctionProcessingTask):
     )
 
 
+# TODO: add logs to task results
 @app.get("/tasks/{task_id}", response_model=TaskResult)
 async def get_task_results(task_id: str):
     is_ready = await broker.result_backend.is_result_ready(task_id)
@@ -63,7 +64,7 @@ async def get_task_results(task_id: str):
             function_result=None
         )
 
-    task_result = await broker.result_backend.get_result(task_id)
+    task_result = await broker.result_backend.get_result(task_id, with_logs=True)
     return TaskResult(
         task_id=task_id,
         status=TaskStatus.COMPLETED if not task_result.is_err else TaskStatus.CRASHED,

@@ -7,27 +7,31 @@ from helpers import EventPacker
 from event_writer import AsyncTcpEventWriter
 
 from typing import Dict
+from pathlib import Path
 
 import logging
 
 logger = logging.getLogger(__name__)
 
+TARGET_ROOT = "/targets"
+
 
 @broker.task
 async def process_function(evidence_uid: str,
-                           target_path: str,
+                           relative_path: str,
                            function_name: str,
                            tcp_event_broker_host: str,
                            tcp_event_broker_port: int) -> Dict:
     result_dict = {
         "evidence_uid": evidence_uid,
-        "evidence_path": target_path,
+        "evidence_path": relative_path,
         "function_name": function_name,
         "records": 0,
         "error": None
     }
 
     try:
+        target_path = Path(TARGET_ROOT) / relative_path
         target = Target.open(target_path)
     except Exception as e:
         logger.critical(f"Target initialization error: [{e}]", exc_info=True)
