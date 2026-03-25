@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from broker import broker
 from config import EVENT_BROKER_HOST, EVENT_BROKER_PORT
 from tasks import process_function
-from helpers import create_index
+from elk import create_index
 from models import (
     FunctionProcessingTask,
     TaskStatus,

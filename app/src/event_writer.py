@@ -8,14 +8,13 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 
-class AbstractAsyncEventWriter(abc.ABC):
+class AbstractAsyncEventWriter(AbstractAsyncContextManager):
     @abc.abstractmethod
     async def write_event(self, event_bytes):
         pass
 
 
-# TODO: Migrate from infinite retries to limited
-class AsyncTcpEventWriter(AbstractAsyncContextManager, AbstractAsyncEventWriter):
+class AsyncTcpEventWriter(AbstractAsyncEventWriter):
     def __init__(self,
                  broker_host: str,
                  broker_port: int,
