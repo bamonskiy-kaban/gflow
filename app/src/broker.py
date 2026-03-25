@@ -1,4 +1,6 @@
-from taskiq_redis import RedisAsyncResultBackend, ListQueueBroker
-from config import REDIS_URL
+from config import AMQP_URL, POSTGRES_URL
+from taskiq_aio_pika import AioPikaBroker
+from taskiq_pg.asyncpg import AsyncpgResultBackend
 
-broker = ListQueueBroker(REDIS_URL).with_result_backend(RedisAsyncResultBackend(REDIS_URL))
+
+broker = AioPikaBroker(url=AMQP_URL).with_result_backend(AsyncpgResultBackend(dsn=POSTGRES_URL))

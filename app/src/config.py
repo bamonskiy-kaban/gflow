@@ -1,6 +1,7 @@
 import os
 
-REDIS_URL = os.getenv("REDIS_URL")
+AMQP_URL = os.getenv("AMQP_URL")
+POSTGRES_URL = os.getenv("POSTGRES_URL")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 OPENSEARCH_PORT = int(os.getenv("OPENSEARCH_PORT", 0))
 EVENT_BROKER_HOST = os.getenv("EVENT_BROKER_HOST")
