@@ -75,7 +75,6 @@ class AsyncTcpEventWriter(AbstractAsyncEventWriter):
                 await self._connect()
                 self._writer.write(chunk)
                 await self._writer.drain()
-                logger.info(f"Chunk of [{len(chunk)}] bytes successfully sent")
                 break
 
             except Exception as e:

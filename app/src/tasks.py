@@ -5,6 +5,7 @@ from flow.record import iter_timestamped_records, Record, RecordDescriptor, fiel
 
 from event_writer import AsyncTcpEventWriter
 from typing import Any
+from config import EVENT_BROKER_HOST, EVENT_BROKER_PORT
 from datetime import datetime
 
 from typing import Dict
@@ -17,6 +18,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 TARGET_ROOT = "/targets"
+
+
+class InvalidBrokerConfigException(Exception):
+    pass
 
 
 class EvidenceJsonRecordPacker:
@@ -72,35 +77,35 @@ class EvidenceJsonRecordPacker:
 @broker.task
 async def process_function(evidence_uid: str,
                            relative_path: str,
-                           function_name: str,
-                           tcp_event_broker_host: str,
-                           tcp_event_broker_port: int) -> Dict:
+                           function_name: str) -> Dict:
+    logger.info(
+        f"Function [{function_name}] execution initialized for evidence [{evidence_uid}]. Target [{relative_path}]")
+
     result_dict = {
         "evidence_uid": evidence_uid,
         "evidence_path": relative_path,
         "function_name": function_name,
         "records": 0,
-        "error": None
+        "processing_error": None
     }
 
-    try:
-        target_path = Path(TARGET_ROOT) / relative_path
-        target = Target.open(target_path)
-    except Exception as e:
-        logger.critical(f"Target initialization error: [{e}]", exc_info=True)
-        result_dict["error"] = str(e)
-        return result_dict
+    tcp_event_broker_host = EVENT_BROKER_HOST
+    tcp_event_broker_port = EVENT_BROKER_PORT
 
-    if not target.has_function(function_name):
-        result_dict["error"] = "No such function"
-        logger.critical(
-            f"No such function [{function_name}] for target - Evidence UID: [{evidence_uid}] | Target path: [{target_path}]")
-        return result_dict
+    if not (tcp_event_broker_port or tcp_event_broker_host):
+        raise InvalidBrokerConfigException(
+            f"Fatal error. Broker host: [{tcp_event_broker_host}] | Broker port: [{str(tcp_event_broker_port)}]")
+
+    target_path = Path(TARGET_ROOT) / relative_path
+    target = Target.open(target_path)
 
     _, function = target.get_function(function_name)
 
     count = 0
     record_packer = EvidenceJsonRecordPacker(evidence_uid)
+
+    logger.info(
+        f"Started function [{function_name}] execution for evidence [{evidence_uid}]. Target full path: [{target_path}]")
 
     try:
         async with AsyncTcpEventWriter(tcp_event_broker_host, tcp_event_broker_port) as event_writer:
@@ -112,7 +117,7 @@ async def process_function(evidence_uid: str,
 
     except Exception as e:
         logger.critical(f"Processing critical error: [{e}]", exc_info=True)
-        result_dict["error"] = str(e)
+        result_dict["processing_error"] = str(e)
 
     finally:
         logger.info(
