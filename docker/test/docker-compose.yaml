@@ -20,11 +20,17 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: taskiq
-      POSTGRES_PASSWORD: taskiq
-      POSTGRES_DB: taskiq_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gflow_db
     ports:
       - "5432:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d gflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   api:
     build:
@@ -36,7 +42,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - POSTGRES_URL=postgresql://taskiq:taskiq@postgres:5432/db
+      - API_DB_POSTGRES_URL=postgresql+psycopg://user:password@postgres:5432/gflow_db
+      - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
       - OPENSEARCH_HOST=192.168.128.137
       - OPENSEARCH_PORT=9200
@@ -44,7 +51,7 @@ services:
       rabbitmq:
         condition: service_healthy
       postgres:
-        condition: service_started
+        condition: service_healthy
 
   worker:
     build:
@@ -54,7 +61,7 @@ services:
     volumes:
       - /storage/test:/targets
     environment:
-      - POSTGRES_URL=postgresql://taskiq:taskiq@postgres:5432/db
+      - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
       - EVENT_BROKER_HOST=192.168.128.137
       - EVENT_BROKER_PORT=5044
@@ -62,6 +69,7 @@ services:
       rabbitmq:
         condition: service_healthy
       postgres:
-        condition: service_started
+        condition: service_healthy
+
     deploy:
       replicas: 2

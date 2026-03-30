@@ -5,4 +5,6 @@ orjson>=3.11.7
 taskiq>=0.12.1
 uvicorn>=0.42.0
 taskiq-aio-pika>=0.6.0
-taskiq-postgres[asyncpg]>=0.7.0
+taskiq-postgres[psycopg]>=0.7.0
+sqlalchemy>=2.0.48
+psycopg[python]>=3.3.3

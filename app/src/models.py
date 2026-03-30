@@ -1,48 +1,63 @@
 from pydantic import BaseModel
-from enum import Enum
 from typing import Optional, List
+from datetime import datetime
+from database import Base
+
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+)
+from sqlalchemy import (
+    String,
+    ForeignKey,
+    DateTime,
+)
 
 
-# Example of evidence model
-# class Evidence:
-#     name: str
-#     display_name: str # <domain>\<hostname>
-#     uid: str
-#     tasks: List[str]
-#     os: str
-#     os_version: str
-#     ips: List[str]
+class TaskResult(BaseModel):
+    name: str
+    error: Optional[str]
+    processing_error: Optional[str]
+    records_count: Optional[int]
+    execution_time: Optional[float]
+    is_ready: bool
 
-# class TaskStatus(Enum):
-#     ENQUEUED = "Enqueued"
-#     RUNNING = "Running"
-#     CRASHED = "Crashed"
-#     COMPLETED = "Completed"
-#
-#
-# class FunctionProcessingTask(BaseModel):
-#     case_prefix: str
-#     target_path: str
-#     function: str
-#
-#
-# class TaskSubmitResult(BaseModel):
-#     evidence_uid: str
-#     error: Optional[str]
-#     task_id: Optional[str]
-#
-#
-# class FunctionResult(BaseModel):
-#     evidence_uid: str
-#     target_path: str
-#     function: str
-#     records_count: int
-#     error: Optional[str]
-#
-#
-# class TaskResult(BaseModel):
-#     task_id: Optional[str]
-#     status: TaskStatus
-#     crash_info: Optional[str]
-#     executed_in: float
-#     function_result: Optional[FunctionResult]
+
+class EvidencePostRequest(BaseModel):
+    prefix: str
+    relative_file_path: str
+
+
+class EvidenceResponse(BaseModel):
+    evidence_id: str
+    prefix: str
+    hostname: str
+    domain: Optional[str]
+    os: str
+    os_version: Optional[str]
+    ips: List[str]
+    created_at: datetime
+    tasks: List[str]
+
+
+class Evidence(Base):
+    __tablename__ = "api_evidences"
+    evidence_id: Mapped[String] = mapped_column(String, nullable=False, primary_key=True)
+    hostname: Mapped[String] = mapped_column(String, nullable=False)
+    domain: Mapped[String] = mapped_column(String, nullable=True)
+    prefix: Mapped[String] = mapped_column(String, nullable=False)
+    storage_path: Mapped[String] = mapped_column(String, nullable=False)
+    os: Mapped[String] = mapped_column(String, nullable=False)
+    os_version: Mapped[String] = mapped_column(String, nullable=True)
+    ips: Mapped[String] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    tasks: Mapped[list["Task"]] = relationship(cascade="all, delete-orphan")
+
+
+class Task(Base):
+    __tablename__ = "api_tasks"
+    task_id: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    evidence_id: Mapped[str] = mapped_column(String, ForeignKey("api_evidences.evidence_id", ondelete="CASCADE"),
+                                             nullable=False, index=True)

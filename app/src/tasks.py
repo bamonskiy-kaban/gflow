@@ -82,9 +82,6 @@ async def process_function(evidence_uid: str,
         f"Function [{function_name}] execution initialized for evidence [{evidence_uid}]. Target [{relative_path}]")
 
     result_dict = {
-        "evidence_uid": evidence_uid,
-        "evidence_path": relative_path,
-        "function_name": function_name,
         "records": 0,
         "processing_error": None
     }

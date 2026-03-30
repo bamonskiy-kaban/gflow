@@ -8,8 +8,10 @@ dependencies = [
     "fastapi>=0.135.2",
     "opensearch-py>=3.1.0",
     "orjson>=3.11.7",
+    "psycopg[binary]>=3.3.3",
+    "sqlalchemy>=2.0.48",
     "taskiq>=0.12.1",
     "taskiq-aio-pika>=0.6.0",
-    "taskiq-postgres[asyncpg]>=0.7.0",
+    "taskiq-postgres[psycopg]>=0.7.0",
     "uvicorn>=0.42.0",
 ]
