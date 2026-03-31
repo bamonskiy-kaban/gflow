@@ -1,20 +1,11 @@
 services:
-  rabbitmq:
-    image: rabbitmq:management
+  redis:
+    image: redis:7-alpine
+    container_name: redis
     restart: unless-stopped
     ports:
-      - "5672:5672"
-      - "15672:15672"
-
-    environment:
-      RABBITMQ_DEFAULT_USER: taskiq
-      RABBITMQ_DEFAULT_PASS: taskiq
-
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 5s
-      timeout: 5s
-      retries: 3
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel notice
 
   postgres:
     image: postgres:16
@@ -27,7 +18,7 @@ services:
       - "5432:5432"
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d gflow_db"]
+      test: [ "CMD-SHELL", "pg_isready -U user -d gflow_db" ]
       interval: 5s
       timeout: 5s
       retries: 3
@@ -44,12 +35,12 @@ services:
     environment:
       - API_DB_POSTGRES_URL=postgresql+psycopg://user:password@postgres:5432/gflow_db
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
-      - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379/0
       - OPENSEARCH_HOST=192.168.128.137
       - OPENSEARCH_PORT=9200
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      redis:
+        condition: service_started
       postgres:
         condition: service_healthy
 
@@ -57,19 +48,18 @@ services:
     build:
       context: ../../app
       dockerfile: Dockerfile
-    command: taskiq worker broker:broker tasks --workers 4
+
+    # max tasks is 1 to avoid dissect memleak related to tar container processing
+    command: taskiq worker broker:broker tasks --workers 4 --max-async-tasks 1 --max-tasks-per-child 1 --ack-type when_received --max-prefetch 1
     volumes:
       - /storage/test:/targets
     environment:
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
-      - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379/0
       - EVENT_BROKER_HOST=192.168.128.137
       - EVENT_BROKER_PORT=5044
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      redis:
+        condition: service_started
       postgres:
         condition: service_healthy
-
-    deploy:
-      replicas: 2

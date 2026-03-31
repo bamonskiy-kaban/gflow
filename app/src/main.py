@@ -133,11 +133,19 @@ async def get_task(task_id: str, db: Session = Depends(get_db)):
     is_ready = await broker.result_backend.is_result_ready(task_id)
     task_result = await broker.result_backend.get_result(task_id) if is_ready else None
 
+    processing_error = None
+    records_count = None
+
+    if task_result:
+        if task_result.return_value:
+            processing_error = task_result.return_value.get("processing_error")
+            records_count = task_result.return_value.get("records")
+
     return TaskResult(
         name=task.name,
-        error=task_result.error if task_result else None,
-        processing_error=task_result.return_value.get("processing_error") if task_result else None,
-        records_count=task_result.return_value.get("records") if task_result else None,
+        error=str(task_result.error) if task_result else None,
+        processing_error=processing_error,
+        records_count=records_count,
         execution_time=task_result.execution_time if task_result else None,
         is_ready=is_ready
     )

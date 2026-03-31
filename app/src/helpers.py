@@ -49,7 +49,7 @@ def get_target_info(target_path: str) -> TargetInfo:
     os = getattr(target, "os")
     version = getattr(target, "version") if hasattr(target, "version") else None
     ips_list = getattr(target, "ips") if hasattr(target, "ips") else []
-    ips = ", ".join(ips_list)
+    ips = ",".join(ips_list)
 
     return TargetInfo(
         os=os,

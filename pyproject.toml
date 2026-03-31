@@ -11,7 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.3.3",
     "sqlalchemy>=2.0.48",
     "taskiq>=0.12.1",
-    "taskiq-aio-pika>=0.6.0",
     "taskiq-postgres[psycopg]>=0.7.0",
+    "taskiq-redis>=1.2.2",
     "uvicorn>=0.42.0",
 ]
