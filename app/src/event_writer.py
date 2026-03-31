@@ -63,8 +63,8 @@ class AsyncTcpEventWriter(AbstractAsyncEventWriter):
                         chunk = bytearray()
                         events_count = 0
 
-                        if self._is_closing and self._queue.empty():
-                            break
+                    if self._is_closing and self._queue.empty():
+                        break
 
         except Exception as e:
             logger.critical(f"Fatal error in flush worker: [{e}]", exc_info=True)
