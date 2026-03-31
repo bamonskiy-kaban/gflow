@@ -1,7 +1,14 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Depends
-from models import Base, TaskResult, EvidencePostRequest, EvidenceResponse, Evidence, Task
+from models import (
+    Base,
+    EvidencePostRequest,
+    EvidenceResponse,
+    Evidence,
+    TaskResult,
+    Task
+)
 
 from broker import broker
 from config import API_TARGETS_DIR, FUNCTIONS
@@ -35,11 +42,6 @@ async def get_db():
         yield db
     finally:
         db.close()
-
-
-@app.get("/evidences")
-async def list_evidences():
-    pass
 
 
 @app.post("/evidence")
