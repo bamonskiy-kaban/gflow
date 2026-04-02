@@ -56,7 +56,7 @@ triage.tar
 Инициирование обработки триажа выполняется посредством POST-запроса, с указанием расположения .TAR-файла триажа и префикса:
 
 ```commandline
-curl -X POST http://localhost:8000/evidence -H 'Content-Type: application/json' -d '{"prefix": "fulltest", "relative_file_path": "term-4.tar"}'
+curl -X POST http://localhost:8000/evidence -H 'Content-Type: application/json' -d '{"prefix": "<prefix>", "relative_file_path": "<relative_path_to_triage>"}'
 ```
 Данный запрос вернет идентификатор триажа, взятого в работу.
 Префикс - произвольная строка. Результаты парсинга сохраняются в OpenSearch в индекс, имя которого соответствует правилу <prefix>-<evidence_id>.
